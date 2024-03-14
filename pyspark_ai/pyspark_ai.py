@@ -402,9 +402,6 @@ class SparkAI:
 
         soup = BeautifulSoup(response.text, "html.parser")
 
-        page_content = soup.get_text()
-        print(f"Page content obtained: {page_content[:500]}...")  # Print first 500 chars
-
         # add url and page content to cache
         if cache:
             if self._cache.lookup(key=url):
@@ -419,11 +416,7 @@ class SparkAI:
         # dataset's description.
         if is_url:
             desc = soup.title.string
-
-        df = self._create_dataframe_with_llm(page_content, desc, columns, cache)
-        print(f"DataFrame created: {df.show(3)}")  # Show top 3 rows for inspection
-
-        return df
+        return self._create_dataframe_with_llm(page_content, desc, columns, cache)
 
     def _get_transform_sql_query_from_agent(
         self,
