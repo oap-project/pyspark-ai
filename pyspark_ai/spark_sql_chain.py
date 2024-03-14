@@ -5,6 +5,7 @@ from langchain.chains import LLMChain
 from langchain.chat_models.base import BaseChatModel
 from langchain.schema import BaseMessage, HumanMessage
 from pyspark.sql import SparkSession
+from langchain_core.language_models.llms import BaseLLM
 
 from pyspark_ai.ai_utils import AIUtils
 from pyspark_ai.code_logger import CodeLogger
