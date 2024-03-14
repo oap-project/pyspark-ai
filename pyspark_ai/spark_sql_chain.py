@@ -29,16 +29,16 @@ class SparkSQLChain(LLMChain):
     ) -> str:
         assert not args, "The chain expected no arguments"
         # assert llm is an instance of BaseChatModel
-        assert isinstance(
-            self.llm, BaseChatModel
-        ), "The llm is not an instance of BaseChatModel"
+        #assert isinstance(
+        #    self.llm, BaseChatModel
+        #), "The llm is not an instance of BaseChatModel"
         prompt_str = self.prompt.format_prompt(**kwargs).to_string()
         messages = [HumanMessage(content=prompt_str)]
         return self._generate_code_with_retries(self.llm, messages, self.max_retries)
 
     def _generate_code_with_retries(
         self,
-        chat_model: BaseChatModel,
+        chat_model: BaseLLM,
         messages: List[BaseMessage],
         retries: int = 3,
     ) -> str:
