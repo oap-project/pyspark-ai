@@ -1,12 +1,27 @@
+import os
+import time
 from langchain_community.llms import VLLM
+from pyspark_ai import SparkAI
+
+# Set the environment variable
+#os.environ['OMP_NUM_THREADS'] = '32'
+os.environ["HUGGINGFACEHUB_API_TOKEN"] = "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"
+
+# Start timer
+start_time = time.time()
+
+# Initialize the VLLM
 llm = VLLM(
-    model="defog/sqlcoder"
+    #optional model: "bigcode/starcoder", "defog/sqlcoder-7b-2", "defog/sqlcoder"
+    model="defog/sqlcoder",
+    trust_remote_code=True,
 )
 
-from pyspark_ai import SparkAI
+# Initialize and activate SparkAI
 spark_ai = SparkAI(llm=llm,verbose=True)
 spark_ai.activate()
 
+# DataFrame operation
 df = spark_ai._spark.createDataFrame(
     [
         ("Normal", "Cellphone", 6000),
@@ -21,6 +36,11 @@ df = spark_ai._spark.createDataFrame(
     ],
     ["product", "category", "revenue"]
 )
+df.ai.transform("What are the best-selling Cellphone?").show()
+#df.ai.plot()
 
-df.ai.transform("What are the best-selling and the second best-selling products in every category?").show()
+# End timer
+end_time = time.time()
+print(f"Total execution time: {end_time - start_time} seconds")
+
 
