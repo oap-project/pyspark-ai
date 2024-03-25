@@ -34,6 +34,7 @@ class SparkSQLChain(LLMChain):
         #    self.llm, BaseChatModel
         #), "The llm is not an instance of BaseChatModel"
         prompt_str = self.prompt.format_prompt(**kwargs).to_string()
+        print(f"-------------------------Input prompt is:-------------------------\n\n {prompt_str}\n")
         messages = [HumanMessage(content=prompt_str)]
         return self._generate_code_with_retries(self.llm, messages, self.max_retries)
 
@@ -44,10 +45,12 @@ class SparkSQLChain(LLMChain):
         retries: int = 3,
     ) -> str:
         response = chat_model.predict_messages(messages)
-        if self.logger is not None:
-            self.logger.info(response.content)
+        print(f"-------------------------The model replies:-------------------------\n\n {response.content} \n")
+        #if self.logger is not None:
+         #   self.logger.info(response.content)
         code = AIUtils.extract_code_blocks(response.content)[0]
         try:
+            print(f"-------------------------Spark retrieved sql:-------------------------\n\n {code}\n")
             self.spark.sql(code)
             return code
         except Exception as e:
@@ -62,7 +65,7 @@ class SparkSQLChain(LLMChain):
             if self.logger is not None:
                 self.logger.info("Retrying with " + str(retries) + " retries left")
 
-            messages.append(response)
+            # messages.append(response)
             # append the exception as a HumanMessage into messages
-            messages.append(HumanMessage(content=str(e)))
+            # messages.append(HumanMessage(content=str(e)))
             return self._generate_code_with_retries(chat_model, messages, retries - 1)

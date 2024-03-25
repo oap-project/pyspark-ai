@@ -480,6 +480,7 @@ class SparkAI:
             )
         else:
             # Otherwise, generate the SQL query with a prompt with few-shot examples
+            print(f"-------------------------Start generating sql query with a prompt with few-shot examples-------------------------\n\n")
             return self.sql_chain.run(
                 view_name=temp_view_name,
                 sample_vals=sample_vals_str,
@@ -496,6 +497,7 @@ class SparkAI:
         df.createOrReplaceTempView(temp_view_name)
         schema_lst = self._get_df_schema(df)
         schema_str = "\n".join(schema_lst)
+        print(f"-------------------------Current table schema from df is:-------------------------\n\n {schema_str}\n")
         sample_rows = self._get_sample_spark_rows(df)
         schema_row_lst = []
         for index in range(len(schema_lst)):
@@ -505,8 +507,9 @@ class SparkAI:
             curr_schema_row = f"({schema_lst[index]}, {str(sample_vals)})"
             schema_row_lst.append(curr_schema_row)
         sample_vals_str = "\n".join([str(val) for val in schema_row_lst])
+        print(f"-------------------------Current sample vals are:-------------------------\n\n {sample_vals_str}\n")
         comment = self._get_table_comment(df)
-
+        print(f"-------------------------Current table comment is-------------------------\n\n {comment}\n")
         if cache:
             cache_key = ReActSparkSQLAgent.cache_key(desc, schema_str)
             cached_result = self._cache.lookup(key=cache_key)
@@ -536,6 +539,7 @@ class SparkAI:
                  on the input DataFrame.
         """
         sql_query = self._get_transform_sql_query(df, desc, cache)
+        print(f"-------------------------Received query:-------------------------\n\n {sql_query}\n")
         return self._spark.sql(sql_query)
 
     def explain_df(self, df: DataFrame, cache: bool = True) -> str:
