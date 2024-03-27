@@ -23,6 +23,9 @@ class AIMethodWrapper:
         self.spark_ai = spark_ai
         self.df_instance = df_instance
 
+    def transform_tpch(self, desc: str, table: str, cache: bool = False) -> DataFrame:
+        return self.spark_ai.transform_df_tpch(desc, table, cache)
+
     def transform(self, desc: str, cache: bool = True) -> DataFrame:
         """
         Transform the DataFrame using the given description.
