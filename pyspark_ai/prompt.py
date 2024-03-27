@@ -180,12 +180,17 @@ It's very important to ONLY use the verbatim column_name in your resulting SQL q
 {sample_vals}
 
 Write a Spark SQL query to retrieve the following from view `{view_name}`: {desc}
+The result is ALWAYS a Spark SQL query.
+No other output other than Spark SQL query is required.
+The generated Spark SQL query must be preceded and followed by triple backticks (```).
+For exmaple: ```Spark SQL query```
 """
 
 SPARK_SQL_SUFFIX_FOR_AGENT = SPARK_SQL_SUFFIX + "\n{agent_scratchpad}"
 
 SPARK_SQL_PREFIX = """You are an assistant for writing professional Spark SQL queries. 
-Given a question, you need to write a Spark SQL query to answer the question. The result is ALWAYS a Spark SQL query.
+Given a question, you need to write a Spark SQL query to answer the question. The result is ALWAYS a Spark SQL query.No other output other than Spark SQL query is required.
+The generated Spark SQL code must be formatted as a code block using triple backticks (```) to delineate it as code.
 Use the COUNT SQL function when the query asks for total number of some non-countable column.
 Use the SUM SQL function to accumulate the total number of countable column values."""
 
