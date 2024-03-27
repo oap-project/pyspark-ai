@@ -2,6 +2,7 @@ import contextlib
 import io
 import os
 import re
+import time
 from typing import Callable, List, Optional
 from urllib.parse import urlparse
 
@@ -538,7 +539,12 @@ class SparkAI:
         :return: Returns a new Spark DataFrame that is the result of applying the specified transformation
                  on the input DataFrame.
         """
+        print(f"-------------------------Start get_transform_sql_query-------------------------\n\n")
+        start_time = time.time()
         sql_query = self._get_transform_sql_query(df, desc, cache)
+        end_time = time.time()
+        get_transform_sql_query_time = end_time - start_time
+        print(f"-------------------------End get_transform_sql_query-------------------------\n\n get_transform_sql_query_time: {get_transform_sql_query_time} seconds\n")
         print(f"-------------------------Received query:-------------------------\n\n {sql_query}\n")
         return self._spark.sql(sql_query)
 
