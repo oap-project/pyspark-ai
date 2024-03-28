@@ -171,28 +171,25 @@ SPARK_SQL_EXAMPLES_VECTOR_SEARCH = [
     spark_sql_shared_example_4,
 ]
 
-SPARK_SQL_SUFFIX = """\nQuestion: Given a Spark temp view `{view_name}` {comment}.
-
-Here are column names and sample values from each column, to help you understand the columns in the dataframe.
-The format will be (column_name, type, [sample_value_1, sample_value_2...])... 
-Use these column names and sample values to help you choose which columns to query.
-It's very important to ONLY use the verbatim column_name in your resulting SQL query; DO NOT include the type.
+SPARK_SQL_SUFFIX = """\nQuestion: Given a Spark temp view `{view_name}` {comment} with the following sample vals,
+ in the format (column_name, type, [sample_value_1, sample_value_2...]):
+```
 {sample_vals}
-
-Write a Spark SQL query to retrieve the following from view `{view_name}`: {desc}
-The result is ALWAYS a Spark SQL query.
-No other output other than Spark SQL query is required.
-The generated Spark SQL query must be preceded and followed by triple backticks (```).
-For exmaple: ```Spark SQL query```
+```
+Write a Spark SQL query to retrieve from view `{view_name}`: {desc}
+Answer:
 """
 
 SPARK_SQL_SUFFIX_FOR_AGENT = SPARK_SQL_SUFFIX + "\n{agent_scratchpad}"
 
 SPARK_SQL_PREFIX = """You are an assistant for writing professional Spark SQL queries. 
-Given a question, you need to write a Spark SQL query to answer the question. The result is ALWAYS a Spark SQL query.No other output other than Spark SQL query is required.
-The generated Spark SQL code must be formatted as a code block using triple backticks (```) to delineate it as code.
-Use the COUNT SQL function when the query asks for total number of some non-countable column.
-Use the SUM SQL function to accumulate the total number of countable column values."""
+Given a question, you need to write a Spark SQL query to answer the question.
+The rules that you should follow for answering question:
+1.The answer consists exclusively of SQL statements.
+2.SQL statements should be  Spark SQL query.
+3.ONLY use the verbatim column_name in your resulting SQL query; DO NOT include the type.
+4.Use the COUNT SQL function when the query asks for total number of some non-countable column.
+5.Use the SUM SQL function to accumulate the total number of countable column values."""
 
 SPARK_SQL_PREFIX_VECTOR_SEARCH = (
     SPARK_SQL_PREFIX

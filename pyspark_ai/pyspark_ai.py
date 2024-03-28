@@ -528,14 +528,23 @@ class SparkAI:
             return self._get_sql_query(temp_view_name, sample_vals_str, comment, desc)
 
 
-    @staticmethod
-    def _get_table_schema(table: str) -> list:
-        df = self._spark.sql(f"describe {table}")
+    def _get_table_schema(self, table: str) -> list:
+        df = self._spark.sql(f"select * from {table}")
         schema_lst = [f"{name}, {dtype}" for name, dtype in df.dtypes]
         return schema_lst
 
+    def _get_sample_spark_rows(self, df: DataFrame) -> list:
 
-    def _get_sample_spark_rows(self, table: str) -> list:
+        if self._sample_rows_in_table_info <= 0:
+            return []
+        try:
+            sample_rows = SparkUtils.get_dataframe_results(df.limit(3))
+            return sample_rows
+        except Exception:
+            # If fail to get sample rows, return empty list
+            return []
+
+    def _get_sample_spark_rows_tpch(self, table: str) -> list:
  
         if self._sample_rows_in_table_info <= 0:
             return []
@@ -549,11 +558,10 @@ class SparkAI:
 
     def _get_transform_sql_query_tpch(self, desc: str, table: str, cache: bool) -> str:
         self.log(f"Retrieve table schema for {table} \n")
-        df.createOrReplaceTempView(temp_view_name)
         schema_lst = self._get_table_schema(table)
         schema_str = "\n".join(schema_lst)
         print(f"-------------------------Current table schema from df is:-------------------------\n\n {schema_str}\n")
-        sample_rows = self._get_sample_spark_rows(table)
+        sample_rows = self._get_sample_spark_rows_tpch(table)
         schema_row_lst = []
         for index in range(len(schema_lst)):
             sample_vals = []
@@ -563,23 +571,10 @@ class SparkAI:
             schema_row_lst.append(curr_schema_row)
         sample_vals_str = "\n".join([str(val) for val in schema_row_lst])
         print(f"-------------------------Current sample vals are:-------------------------\n\n {sample_vals_str}\n")
-        comment = self._get_table_comment(df)
-        print(f"-------------------------Current table comment is-------------------------\n\n {comment}\n")
-        if cache:
-            cache_key = ReActSparkSQLAgent.cache_key(desc, schema_str)
-            cached_result = self._cache.lookup(key=cache_key)
-            if cached_result is not None:
-                self.log("Using cached result for the transform:")
-                self.log(CodeLogger.colorize_code(cached_result, "sql"))
-                return replace_view_name(cached_result, temp_view_name)
-            else:
-                sql_query = self._get_sql_query(
-                    temp_view_name, sample_vals_str, comment, desc
-                )
-                self._cache.update(key=cache_key, val=canonize_string(sql_query))
-                return sql_query
-        else:
-            return self._get_sql_query(temp_view_name, sample_vals_str, comment, desc)
+        #comment = self._get_table_comment(df)
+        comment = ""
+        #print(f"-------------------------Current table comment is-------------------------\n\n {comment}\n")
+        return self._get_sql_query(table, sample_vals_str, comment, desc)
 
     def transform_df_tpch(self, desc: str, table: str, cache: bool = False) -> DataFrame:
         print(f"---------------------TPCH Table {table}------------------------------\n\n")

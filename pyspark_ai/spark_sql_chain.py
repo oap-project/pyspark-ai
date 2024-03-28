@@ -49,6 +49,7 @@ class SparkSQLChain(LLMChain):
         #if self.logger is not None:
          #   self.logger.info(response.content)
         code = AIUtils.extract_code_blocks(response.content)[0]
+        #code = response.content.split("\n")[1].split("Human:")[1].replace("`","")
         try:
             print(f"-------------------------Spark retrieved sql:-------------------------\n\n {code}\n")
             self.spark.sql(code)
