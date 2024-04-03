@@ -29,10 +29,10 @@ class SparkSQLChain(LLMChain):
         **kwargs: Any,
     ) -> str:
         assert not args, "The chain expected no arguments"
-        # assert llm is an instance of BaseChatModel
-        #assert isinstance(
-        #    self.llm, BaseChatModel
-        #), "The llm is not an instance of BaseChatModel"
+        # assert llm is an instance of BaseLanguageModel
+        assert isinstance(
+            self.llm, BaseLanguageModel
+        ), "The llm is not an instance of BaseLanguageModel"
         prompt_str = self.prompt.format_prompt(**kwargs).to_string()
         print(f"-------------------------Input prompt is:-------------------------\n\n {prompt_str}\n")
         messages = [HumanMessage(content=prompt_str)]
@@ -69,4 +69,5 @@ class SparkSQLChain(LLMChain):
             # messages.append(response)
             # append the exception as a HumanMessage into messages
             # messages.append(HumanMessage(content=str(e)))
+            # In this situation, when the retry happens, it appends the response back to the original prompt, making it excessively long. This can cause the model to return incorrect results again. Therefore, it's better not to include it.
             return self._generate_code_with_retries(chat_model, messages, retries - 1)

@@ -37,10 +37,10 @@ class PythonExecutor(LLMChain):
         **kwargs: Any,
     ) -> str:
         assert not args, "The chain expected no arguments"
-        # assert llm is an instance of BaseChatModel
-        #assert isinstance(
-        #    self.llm, BaseChatModel
-        #), "The llm is not an instance of BaseChatModel"
+        # assert llm is an instance of BaseLanguageModel
+        assert isinstance(
+            self.llm, BaseLanguageModel
+        ), "The llm is not an instance of BaseLanguageModel"
         prompt_str = canonize_string(self.prompt.format_prompt(**kwargs).to_string())
         use_cache = tags != SKIP_CACHE_TAGS
         if self.cache is not None:
