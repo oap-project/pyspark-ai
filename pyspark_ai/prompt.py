@@ -185,7 +185,7 @@ SPARK_SQL_SUFFIX_FOR_AGENT = SPARK_SQL_SUFFIX + "\n{agent_scratchpad}"
 SPARK_SQL_PREFIX = """You are an assistant for writing professional Spark SQL queries. 
 Given a question, you need to write a Spark SQL query to answer the question.
 The rules that you should follow for answering question:
-1.The answer consists exclusively of SQL statements.
+1.The answer only consists of Spark SQL query. No explaination. No 
 2.SQL statements should be  Spark SQL query.
 3.ONLY use the verbatim column_name in your resulting SQL query; DO NOT include the type.
 4.Use the COUNT SQL function when the query asks for total number of some non-countable column.
