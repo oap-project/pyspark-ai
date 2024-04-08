@@ -67,6 +67,9 @@ class SparkSQLChain(LLMChain):
                 self.logger.info("Retrying with " + str(retries) + " retries left")
 
             # messages.append(response)
+            # Remove retry logic to prevent long response append and ensure accurate model results.
+            
             # append the exception as a HumanMessage into messages
             # messages.append(HumanMessage(content=str(e)))
+            # Remove retry logic to prevent long response append and ensure accurate model results.
             return self._generate_code_with_retries(chat_model, messages, retries - 1)
