@@ -12,6 +12,7 @@ from langchain.chains import LLMChain
 from langchain.prompts.base import BasePromptTemplate
 from langchain.utilities.google_search import GoogleSearchAPIWrapper
 from langchain_community.chat_models import ChatOpenAI
+from langchain_core.vectorstores import VectorStore
 from pyspark.sql import DataFrame, SparkSession
 
 from pyspark_ai.ai_utils import AIUtils
@@ -23,6 +24,7 @@ from pyspark_ai.prompt import (
     PLOT_PROMPT,
     SEARCH_PROMPT,
     SQL_CHAIN_PROMPT,
+    SQL_CHAIN_PROMPT_RAG,
     SQL_PROMPT,
     UDF_PROMPT,
     VERIFY_PROMPT,
@@ -61,6 +63,7 @@ class SparkAI:
         enable_cache: bool = True,
         cache_file_format: str = "json",
         cache_file_location: Optional[str] = None,
+        vector_db: VectorStore = None,
         vector_store_dir: Optional[str] = None,
         vector_store_max_gb: Optional[float] = 16,
         max_tokens_of_web_content: int = 3000,
@@ -110,6 +113,7 @@ class SparkAI:
             ).search
         else:
             self._cache = None
+        self._vector_db = vector_db
         self._vector_store_dir = vector_store_dir
         self._vector_store_max_gb = vector_store_max_gb
         self._max_tokens_of_web_content = max_tokens_of_web_content
@@ -136,8 +140,12 @@ class SparkAI:
     @property
     def sql_chain(self):
         if self._sql_chain is None:
+            if self._vector_db:
+                prompt_temp = SQL_CHAIN_PROMPT_RAG
+            else:
+                prompt_temp = SQL_CHAIN_PROMPT
             self._sql_chain = SparkSQLChain(
-                prompt=SQL_CHAIN_PROMPT,
+                prompt=prompt_temp,
                 llm=self._llm,
                 logger=self._logger,
                 spark=self._spark,
@@ -576,6 +584,16 @@ class SparkAI:
         #print(f"-------------------------Current table comment is-------------------------\n\n {comment}\n")
         return self._get_sql_query(table, sample_vals_str, comment, desc)
 
+    def _get_transform_sql_query_rag(self, desc: str):
+        docs = self._vector_db.similarity_search(desc)
+        reference_contents = []
+        for doc in docs:
+            reference_contents.append(doc.page_content)
+        reference_str = "\n".join([str(val) for val in reference_contents])
+        print(f"-------------------------Current reference contents are:-------------------------\n\n {reference_str}\n")
+        return self._get_sql_query('', '', reference_str, desc)
+
+
     def transform_df_tpch(self, desc: str, table: str, cache: bool = False) -> DataFrame:
         print(f"---------------------TPCH Table {table}------------------------------\n\n")
         start_time = time.time()
@@ -585,6 +603,18 @@ class SparkAI:
         print(f"-------------------------End get_transform_sql_query-------------------------\n\n get_transform_sql_query_time: {get_transform_sql_query_time} seconds\n")
         print(f"-------------------------Received query:-------------------------\n\n {sql_query}\n")
         return self._spark.sql(sql_query)
+
+    def transform_rag(self, desc: str,  cache: bool = False) -> DataFrame:
+        print(f"---------------------Start get_transform_sql_query with rag------------------------------\n\n")
+        start_time = time.time()
+        sql_query = self._get_transform_sql_query_rag(desc)
+        end_time = time.time()
+        get_transform_sql_query_time = end_time - start_time
+        print(f"-------------------------End get_transform_sql_query-------------------------\n\n get_transform_sql_query_time: {get_transform_sql_query_time} seconds\n")
+        print(f"-------------------------Received query:-------------------------\n\n {sql_query}\n")
+        return self._spark.sql(sql_query)
+
+
 
     def transform_df(self, df: DataFrame, desc: str, cache: bool = True) -> DataFrame:
         """

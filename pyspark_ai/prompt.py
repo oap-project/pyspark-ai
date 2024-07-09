@@ -62,6 +62,61 @@ Write a Spark SQL query to retrieve from view `spark_ai_temp_view_12qcl3`: What 
 
 sql_answer2 = "SELECT COUNT(`Student`) FROM `spark_ai_temp_view_12qcl3` WHERE `Birthday` = 'January 1, 2006'"
 
+sql_question3 = """QUESTION: Given some Spark tables metadata or sqls:
+```
+CREATE TABLE Customers (
+  customer_id INT,
+  customer_name STRING,
+  customer_email STRING
+);
+
+CREATE TABLE Orders (
+  order_id INT,
+  customer_id INT,
+  order_date DATE,
+  order_total DECIMAL(10, 2)
+);
+```
+Write a Spark SQL query to retrieve data based on the provided information: How many orders has each customer placed?
+"""
+
+sql_answer3 = """
+SELECT c.customer_name, COUNT(o.order_id) AS number_of_orders
+FROM Customers c
+JOIN Orders o ON c.customer_id = o.customer_id
+GROUP BY c.customer_name;
+"""
+
+
+sql_question4 = """QUESTION: Given some Spark tables metadata or sqls:
+```
+CREATE TABLE Products (
+  product_id INT,
+  product_name STRING,
+  product_price DECIMAL(10, 2),
+  category STRING
+);
+
+CREATE TABLE Sales (
+  sale_id INT,
+  product_id INT,
+  sale_date DATE,
+  quantity INT,
+  total_sale_amount DECIMAL(10, 2)
+);
+```
+Write a Spark SQL query to retrieve data based on the provided information: Which product has the highest number of sales in terms of quantity sold?
+"""
+
+sql_answer4 = """
+SELECT p.product_name, SUM(s.quantity) AS total_quantity_sold
+FROM Products p
+JOIN Sales s ON p.product_id = s.product_id
+GROUP BY p.product_name
+ORDER BY total_quantity_sold DESC
+LIMIT 1;
+"""
+
 spark_sql_shared_example_1_prefix = f"""{sql_question1}
 Thought: The column names are non-descriptive, but from the sample values I see that column `a` contains mountains
 and column `c` contains countries. So, I will filter on column `c` for 'Japan' and column `a` for the mountain.
@@ -180,13 +235,21 @@ Write a Spark SQL query to retrieve from view `{view_name}`: {desc}
 Answer:
 """
 
+SPARK_SQL_SUFFIX_RAG = """\nQUESTION: Given some Spark tables metadata or sqls:
+```
+{comment}
+```
+Write a Spark SQL query to retrieve data based on the provided information: {desc}
+Answer:
+"""
+
 SPARK_SQL_SUFFIX_FOR_AGENT = SPARK_SQL_SUFFIX + "\n{agent_scratchpad}"
 
 SPARK_SQL_PREFIX = """You are an assistant for writing professional Spark SQL queries. 
 Given a question, you need to write a Spark SQL query to answer the question.
 The rules that you should follow for answering question:
-1.The answer only consists of Spark SQL query. No explaination. No 
-2.SQL statements should be  Spark SQL query.
+1.The answer only consists of Spark SQL query. No explanation.
+2.SQL statements should be Spark SQL query.
 3.ONLY use the verbatim column_name in your resulting SQL query; DO NOT include the type.
 4.Use the COUNT SQL function when the query asks for total number of some non-countable column.
 5.Use the SUM SQL function to accumulate the total number of countable column values."""
@@ -230,6 +293,23 @@ SQL_CHAIN_EXAMPLES = [
 SQL_CHAIN_PROMPT = PromptTemplate.from_examples(
     examples=SQL_CHAIN_EXAMPLES,
     suffix=SPARK_SQL_SUFFIX,
+    input_variables=[
+        "view_name",
+        "sample_vals",
+        "comment",
+        "desc",
+    ],
+    prefix=SPARK_SQL_PREFIX,
+)
+
+SQL_CHAIN_EXAMPLES_RAG = [
+    sql_question3 + f"\nAnswer:\n```{sql_answer3}```",
+    sql_question4 + f"\nAnswer:\n```{sql_answer4}```",
+]
+
+SQL_CHAIN_PROMPT_RAG = PromptTemplate.from_examples(
+    examples=SQL_CHAIN_EXAMPLES_RAG,
+    suffix=SPARK_SQL_SUFFIX_RAG,
     input_variables=[
         "view_name",
         "sample_vals",
